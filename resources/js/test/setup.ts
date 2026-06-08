@@ -1,0 +1,9 @@
+import '@testing-library/jest-dom/vitest';
+import { cleanup } from '@testing-library/react';
+import { afterEach } from 'vitest';
+
+// Ensure the DOM is reset between renders so each property-test iteration starts
+// from a clean document.
+afterEach(() => {
+    cleanup();
+});

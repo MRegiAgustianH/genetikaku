@@ -1,0 +1,127 @@
+import { Head, Link, router } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import type { BreadcrumbItem } from '@/types';
+
+interface PhenotypeEntry {
+    id: number;
+    category: string;
+    value: string;
+}
+
+interface PhenotypeIndexProps {
+    phenotypes: PhenotypeEntry[];
+}
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Data Fenotipe', href: '/admin/fenotipe' },
+];
+
+export default function PhenotypeIndex({ phenotypes }: PhenotypeIndexProps) {
+    const handleDelete = (entry: PhenotypeEntry) => {
+        if (
+            window.confirm(
+                `Hapus fenotipe "${entry.category}: ${entry.value}"?`,
+            )
+        ) {
+            router.delete(`/admin/fenotipe/${entry.id}`, {
+                preserveScroll: true,
+            });
+        }
+    };
+
+    return (
+        <>
+            <Head title="Data Fenotipe" />
+
+            <div className="flex h-full flex-1 flex-col gap-6 p-4">
+                <div className="flex items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-semibold tracking-tight">
+                            Data Fenotipe
+                        </h1>
+                        <p className="text-sm text-muted-foreground">
+                            Kelola kategori dan nilai fenotipe yang tersedia
+                            pada formulir prediksi.
+                        </p>
+                    </div>
+
+                    <Button asChild>
+                        <Link href="/admin/fenotipe/create">
+                            Tambah Fenotipe
+                        </Link>
+                    </Button>
+                </div>
+
+                {phenotypes.length === 0 ? (
+                    <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground">
+                        Belum ada data fenotipe. Tambahkan entri pertama Anda.
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto rounded-lg border">
+                        <table className="w-full text-left text-sm">
+                            <thead className="border-b bg-muted/50 text-muted-foreground">
+                                <tr>
+                                    <th scope="col" className="px-4 py-3 font-medium">
+                                        Kategori
+                                    </th>
+                                    <th scope="col" className="px-4 py-3 font-medium">
+                                        Nilai
+                                    </th>
+                                    <th
+                                        scope="col"
+                                        className="px-4 py-3 text-right font-medium"
+                                    >
+                                        Aksi
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {phenotypes.map((entry) => (
+                                    <tr
+                                        key={entry.id}
+                                        className="border-b last:border-0"
+                                    >
+                                        <td className="px-4 py-3 font-medium">
+                                            {entry.category}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            {entry.value}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex justify-end gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    asChild
+                                                >
+                                                    <Link
+                                                        href={`/admin/fenotipe/${entry.id}/edit`}
+                                                    >
+                                                        Ubah
+                                                    </Link>
+                                                </Button>
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        handleDelete(entry)
+                                                    }
+                                                >
+                                                    Hapus
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
+        </>
+    );
+}
+
+PhenotypeIndex.layout = {
+    breadcrumbs,
+};
