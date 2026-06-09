@@ -3,29 +3,29 @@
 namespace App\Models;
 
 use App\Domain\PhenotypeCategory;
+use App\Models\Concerns\HasIllustration;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Phenotype extends Model
 {
-    /** @use HasFactory<\Database\Factories\PhenotypeFactory> */
+    
     use HasFactory;
+    use HasIllustration;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    
     protected $fillable = [
         'category',
         'value',
+        'illustration_path',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    protected $appends = [
+        'illustration_url',
+        'illustration_type',
+    ];
+
+    
     protected function casts(): array
     {
         return [

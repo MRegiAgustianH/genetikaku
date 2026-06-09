@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\PredictionResultController;
 use App\Http\Controllers\Admin\KnowledgeBaseController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\TrainingDataController;
+use App\Http\Controllers\Admin\TrainingDataImportController;
 use App\Http\Controllers\Public\AboutController;
 use App\Http\Controllers\Public\ArticleController;
 use App\Http\Controllers\Public\PredictionController;
@@ -16,24 +17,17 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// Alur publik Tahap 1: Skrining Risiko Thalassemia (Req 1).
 Route::get('/skrining', [ScreeningController::class, 'show'])->name('skrining.show');
 Route::post('/skrining', [ScreeningController::class, 'store'])->name('skrining.store');
 
-// Alur publik Tahap 2: Input Fenotipe (Req 2). Dijaga guard skrining (Req 2.4).
 Route::get('/prediksi', [PredictionController::class, 'create'])
     ->middleware('screening.completed')
     ->name('prediksi.create');
 
-// Alur publik Tahap 3–4: Perhitungan Naive Bayes & Hasil (Req 3, 4).
-// Dijaga guard skrining (Req 2.4).
 Route::post('/prediksi', [PredictionController::class, 'store'])
     ->middleware('screening.completed')
     ->name('prediksi.store');
 
-// Alur publik Tahap 5: Cetak Hasil Prediksi (Req 5). Tanpa guard `screening.completed`:
-// memuat sebuah Hasil_Prediksi tersimpan berdasarkan id (implicit binding), sehingga
-// hasil dapat dicetak kapan pun tanpa memerlukan sesi skrining aktif.
 Route::get('/prediksi/{predictionResult}/cetak', [PredictionController::class, 'print'])
     ->name('prediksi.print');
 
@@ -51,24 +45,30 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::resource('artikel', AdminArticleController::class)->except(['show']);
 
-    // Modul manajemen Data_Fenotipe (Req 13).
+    
     Route::resource('fenotipe', PhenotypeController::class)->except(['show']);
 
-    // Manajemen halaman Tentang: satu record dikelola via GET/PUT (Req 11.1, 11.2).
+    
     Route::get('tentang', [AdminAboutController::class, 'edit'])->name('tentang.edit');
     Route::put('tentang', [AdminAboutController::class, 'update'])->name('tentang.update');
 
-    // Manajemen aset media/ilustrasi terkelola (mis. ilustrasi halaman skrining).
-    // POST dipakai untuk unggah berkas multipart; {key} adalah key aset media.
+    
     Route::get('media', [MediaController::class, 'index'])->name('media.index');
     Route::post('media/{key}', [MediaController::class, 'update'])->name('media.update');
 
-    // Modul manajemen Basis_Pengetahuan (Req 12). Nama route: admin.basis-pengetahuan.*
+    
     Route::resource('basis-pengetahuan', KnowledgeBaseController::class)
         ->except(['show'])
         ->parameters(['basis-pengetahuan' => 'basis_pengetahuan']);
 
-    // Modul manajemen Data_Latih (Req 14). Nama route: admin.data-latih.*
+    
+    Route::get('data-latih/import', [TrainingDataImportController::class, 'create'])
+        ->name('data-latih.import');
+    Route::post('data-latih/import', [TrainingDataImportController::class, 'store'])
+        ->name('data-latih.import.store');
+    Route::get('data-latih/template', [TrainingDataImportController::class, 'template'])
+        ->name('data-latih.template');
+
     Route::resource('data-latih', TrainingDataController::class)
         ->except(['show'])
         ->parameters(['data-latih' => 'dataLatih']);

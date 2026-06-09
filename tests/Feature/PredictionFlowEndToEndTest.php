@@ -5,7 +5,6 @@ use App\Domain\ScreeningCategory;
 use App\Domain\ThalassemiaRisk;
 use App\Http\Middleware\EnsureScreeningCompleted;
 use App\Http\Requests\Public\ScreeningRequest;
-use App\Models\KnowledgeBaseRule;
 use App\Models\Phenotype;
 use App\Models\PredictionResult;
 use App\Models\ScreeningResult;
@@ -46,32 +45,16 @@ const E2E_PHENOTYPES = [
 
 /**
  * Seed seluruh prasyarat alur empat tahap:
- *  - KnowledgeBaseRule  : agar ScreeningEngine menghasilkan Hasil_Skrining.
  *  - Phenotype          : nilai valid keempat kategori untuk form prediksi.
  *  - TrainingData       : baris dengan nilai atribut dari fenotipe + kategori
  *                         skrining valid, sehingga NaiveBayesClassifier punya
  *                         data latih non-kosong & valid.
+ *
+ * Catatan: Basis_Pengetahuan kini bersifat STATIS (App\Domain\ScreeningRuleSet)
+ * sehingga tidak perlu di-seed; ScreeningEngine memakai aturan tetap tersebut.
  */
 function e2eSeedPrerequisites(): void
 {
-    // --- Basis_Pengetahuan: satu aturan per Indikator_Skrining kanonik ---
-    $rules = [
-        ['Riwayat keluarga Thalassemia', 2, 'Carrier'],
-        ['Riwayat diagnosis Thalassemia', 5, 'Berisiko Tinggi'],
-        ['Riwayat anemia', 1, 'Carrier'],
-        ['Kadar Hb rendah', 1, 'Carrier'],
-        ['Riwayat transfusi darah', 3, 'Berisiko Tinggi'],
-        ['Gejala pendukung lainnya', 1, 'Normal'],
-    ];
-
-    foreach ($rules as [$indicator, $weight, $mapping]) {
-        KnowledgeBaseRule::create([
-            'indicator' => $indicator,
-            'weight' => $weight,
-            'classification_mapping' => $mapping,
-        ]);
-    }
-
     // --- Data_Fenotipe: nilai valid per kategori ---
     foreach (E2E_PHENOTYPES as $category => $values) {
         foreach ($values as $value) {

@@ -13,19 +13,18 @@ use Inertia\Response;
 
 class ArticleController extends Controller
 {
-    /**
-     * Tampilkan seluruh artikel (semua status) pada daftar admin (Req 10.1).
-     */
+    
     public function index(): Response
     {
         $articles = Article::query()
             ->orderByDesc('id')
-            ->get(['id', 'title', 'slug', 'status'])
+            ->get(['id', 'title', 'slug', 'status', 'image_path'])
             ->map(fn (Article $article) => [
                 'id' => $article->id,
                 'title' => $article->title,
                 'slug' => $article->slug,
                 'status' => $article->status,
+                'image_url' => $article->image_url,
             ])
             ->values();
 
@@ -34,17 +33,13 @@ class ArticleController extends Controller
         ]);
     }
 
-    /**
-     * Tampilkan formulir pembuatan artikel baru.
-     */
+    
     public function create(): Response
     {
         return Inertia::render('admin/articles/create');
     }
 
-    /**
-     * Simpan artikel baru (Req 10.1).
-     */
+    
     public function store(ArticleRequest $request): RedirectResponse
     {
         $data = $request->validated();
@@ -62,15 +57,14 @@ class ArticleController extends Controller
         return to_route('admin.artikel.index');
     }
 
-    /**
-     * Tampilkan formulir penyuntingan artikel.
-     */
+    
     public function edit(Article $artikel): Response
     {
         return Inertia::render('admin/articles/edit', [
             'article' => [
                 'id' => $artikel->id,
                 'title' => $artikel->title,
+                'summary' => $artikel->summary,
                 'content' => $artikel->content,
                 'status' => $artikel->status,
                 'image_url' => $artikel->image_url,
@@ -78,9 +72,7 @@ class ArticleController extends Controller
         ]);
     }
 
-    /**
-     * Perbarui artikel yang ada (Req 10.2).
-     */
+   
     public function update(ArticleRequest $request, Article $artikel): RedirectResponse
     {
         $data = $request->validated();
@@ -105,9 +97,7 @@ class ArticleController extends Controller
         return to_route('admin.artikel.index');
     }
 
-    /**
-     * Hapus artikel (Req 10.3).
-     */
+    
     public function destroy(Article $artikel): RedirectResponse
     {
         $artikel->delete();

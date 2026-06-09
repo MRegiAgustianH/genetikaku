@@ -30,7 +30,10 @@ class ArticleFactory extends Factory
         return [
             'title' => rtrim($title, '.'),
             'slug' => Str::slug($title).'-'.fake()->unique()->numberBetween(1, 100000),
-            'content' => fake()->paragraphs(5, true),
+            'summary' => '- '.implode("\n- ", fake()->sentences(3)),
+            'content' => "## Apa itu\n\n".fake()->paragraphs(2, true)
+                ."\n\n## Penyebab\n\n".fake()->paragraphs(2, true)
+                ."\n\n## Pencegahan\n\n".fake()->paragraphs(2, true),
             'status' => fake()->randomElement(['draft', 'published']),
         ];
     }

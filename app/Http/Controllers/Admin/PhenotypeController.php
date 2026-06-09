@@ -7,24 +7,25 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\PhenotypeRequest;
 use App\Models\Phenotype;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PhenotypeController extends Controller
 {
-    /**
-     * Tampilkan daftar entri Data_Fenotipe beserta kategori dan nilainya (Req 13.1).
-     */
+
     public function index(): Response
     {
         $phenotypes = Phenotype::query()
             ->orderBy('category')
             ->orderBy('value')
-            ->get(['id', 'category', 'value'])
+            ->get(['id', 'category', 'value', 'illustration_path'])
             ->map(fn (Phenotype $phenotype): array => [
                 'id' => $phenotype->id,
                 'category' => $phenotype->category->value,
                 'value' => $phenotype->value,
+                'illustration_url' => $phenotype->illustration_url,
+                'illustration_type' => $phenotype->illustration_type,
             ])
             ->values();
 
@@ -34,9 +35,7 @@ class PhenotypeController extends Controller
         ]);
     }
 
-    /**
-     * Tampilkan formulir pembuatan entri Data_Fenotipe baru.
-     */
+    
     public function create(): Response
     {
         return Inertia::render('admin/phenotypes/create', [
@@ -44,24 +43,27 @@ class PhenotypeController extends Controller
         ]);
     }
 
-    /**
-     * Simpan entri Data_Fenotipe baru (Req 13.2, 13.3).
-     *
-     * Perubahan langsung tercermin pada opsi formulir prediksi Tahap 2 karena
-     * opsi tersebut dibaca dari tabel `phenotypes` (Req 13.2).
-     */
+    
     public function store(PhenotypeRequest $request): RedirectResponse
     {
-        Phenotype::create($request->validated());
+        $data = $request->validated();
+
+        $phenotype = new Phenotype();
+        $phenotype->category = $data['category'];
+        $phenotype->value = $data['value'];
+
+        if ($request->hasFile('illustration')) {
+            $phenotype->illustration_path = $request->file('illustration')->store('phenotypes', 'public');
+        }
+
+        $phenotype->save();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Data fenotipe berhasil ditambahkan.']);
 
         return to_route('admin.fenotipe.index');
     }
 
-    /**
-     * Tampilkan formulir pengubahan entri Data_Fenotipe.
-     */
+   
     public function edit(Phenotype $fenotipe): Response
     {
         return Inertia::render('admin/phenotypes/edit', [
@@ -69,28 +71,45 @@ class PhenotypeController extends Controller
                 'id' => $fenotipe->id,
                 'category' => $fenotipe->category->value,
                 'value' => $fenotipe->value,
+                'illustration_url' => $fenotipe->illustration_url,
+                'illustration_type' => $fenotipe->illustration_type,
             ],
             'categories' => $this->categoryOptions(),
         ]);
     }
 
-    /**
-     * Perbarui entri Data_Fenotipe (Req 13.2, 13.3).
-     */
+    
     public function update(PhenotypeRequest $request, Phenotype $fenotipe): RedirectResponse
     {
-        $fenotipe->update($request->validated());
+        $data = $request->validated();
+
+        $fenotipe->category = $data['category'];
+        $fenotipe->value = $data['value'];
+
+        if ($request->hasFile('illustration')) {
+            if ($fenotipe->illustration_path) {
+                Storage::disk('public')->delete($fenotipe->illustration_path);
+            }
+            $fenotipe->illustration_path = $request->file('illustration')->store('phenotypes', 'public');
+        } elseif ($request->boolean('remove_illustration') && $fenotipe->illustration_path) {
+            Storage::disk('public')->delete($fenotipe->illustration_path);
+            $fenotipe->illustration_path = null;
+        }
+
+        $fenotipe->save();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Data fenotipe berhasil diperbarui.']);
 
         return to_route('admin.fenotipe.index');
     }
 
-    /**
-     * Hapus entri Data_Fenotipe (Req 13.2).
-     */
+    
     public function destroy(Phenotype $fenotipe): RedirectResponse
     {
+        if ($fenotipe->illustration_path) {
+            Storage::disk('public')->delete($fenotipe->illustration_path);
+        }
+
         $fenotipe->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Data fenotipe berhasil dihapus.']);
@@ -98,11 +117,7 @@ class PhenotypeController extends Controller
         return to_route('admin.fenotipe.index');
     }
 
-    /**
-     * Daftar kategori fenotipe yang valid untuk ditampilkan pada formulir.
-     *
-     * @return list<string>
-     */
+    
     private function categoryOptions(): array
     {
         return array_map(

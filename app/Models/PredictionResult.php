@@ -9,14 +9,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PredictionResult extends Model
 {
-    /** @use HasFactory<\Database\Factories\PredictionResultFactory> */
+    
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+   
     protected $fillable = [
         'screening_result_id',
         'physical_result',
@@ -24,11 +20,7 @@ class PredictionResult extends Model
         'probabilities',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    
     protected function casts(): array
     {
         return [
@@ -38,11 +30,6 @@ class PredictionResult extends Model
         ];
     }
 
-    /**
-     * Get the screening result that owns this prediction result.
-     *
-     * @return BelongsTo<ScreeningResult, $this>
-     */
     public function screeningResult(): BelongsTo
     {
         return $this->belongsTo(ScreeningResult::class);

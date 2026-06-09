@@ -53,7 +53,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Basis Pengetahuan',
-        href: admin.basisPengetahuan.index(),
+        href: '/admin/basis-pengetahuan',
         icon: Network,
     },
     {

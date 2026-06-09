@@ -15,14 +15,19 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function PhenotypeCreate({ categories }: PhenotypeCreateProps) {
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm<{
+        category: string;
+        value: string;
+        illustration: File | null;
+    }>({
         category: '',
         value: '',
+        illustration: null,
     });
 
     const submit = (event: React.FormEvent) => {
         event.preventDefault();
-        post('/admin/fenotipe');
+        post('/admin/fenotipe', { forceFormData: true });
     };
 
     return (
@@ -69,6 +74,20 @@ export default function PhenotypeCreate({ categories }: PhenotypeCreateProps) {
                             placeholder="contoh: A, B, AB, O"
                         />
                         <InputError message={errors.value} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="illustration">Ilustrasi (gambar/video, opsional)</Label>
+                        <Input
+                            id="illustration"
+                            type="file"
+                            accept="image/*,video/mp4,video/webm"
+                            onChange={(e) => setData('illustration', e.target.files?.[0] ?? null)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Ditampilkan pada form prediksi saat nilai ini dipilih. Maks. 20 MB.
+                        </p>
+                        <InputError message={errors.illustration} />
                     </div>
 
                     <div className="flex items-center gap-4">

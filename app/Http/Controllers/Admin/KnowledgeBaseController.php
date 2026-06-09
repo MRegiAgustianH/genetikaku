@@ -5,136 +5,152 @@ namespace App\Http\Controllers\Admin;
 use App\Domain\ScreeningCategory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\KnowledgeBaseRequest;
+use App\Http\Requests\Public\ScreeningRequest;
 use App\Models\KnowledgeBaseRule;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use Throwable;
 
 /**
  * Manajemen Basis_Pengetahuan skrining Thalassemia (Req 12).
  *
- * Seluruh operasi tulis (store/update/destroy) dibungkus transaksi database
- * agar bila terjadi kegagalan teknis, perubahan di-rollback dan data
- * sebelumnya tetap utuh, lalu Admin menerima notifikasi kegagalan
- * (flash message) (Req 12.3).
+ * Admin mengelola aturan skrining: indikator/ciri, bobot, dan kategori yang
+ * diindikasikan. Indikator bersifat dinamis — admin dapat menambah indikator
+ * baru, dan indikator yang ada otomatis tampil pada formulir skrining publik.
+ * Nilai awal berasal dari wawancara pakar (KnowledgeBaseSeeder). Perubahan
+ * langsung dipakai {@see \App\Services\ScreeningEngine} karena ScreeningController
+ * membaca aturan dari DB.
  */
 class KnowledgeBaseController extends Controller
 {
-    /**
-     * Tampilkan daftar aturan Basis_Pengetahuan beserta bobot dan
-     * pemetaan klasifikasinya (Req 12.1).
-     */
     public function index(): Response
     {
         $rules = KnowledgeBaseRule::query()
             ->orderBy('id')
-            ->get(['id', 'indicator', 'weight', 'classification_mapping']);
+            ->get(['id', 'indicator', 'weight', 'classification_mapping', 'illustration_path'])
+            ->map(fn (KnowledgeBaseRule $rule): array => [
+                'id' => $rule->id,
+                'indicator' => $rule->indicator,
+                'weight' => $rule->weight,
+                'classification_mapping' => $rule->classification_mapping,
+                'illustration_url' => $rule->illustration_url,
+                'illustration_type' => $rule->illustration_type,
+            ])
+            ->values();
 
         return Inertia::render('admin/knowledge-base/index', [
             'rules' => $rules,
         ]);
     }
 
-    /**
-     * Tampilkan formulir pembuatan aturan baru.
-     */
     public function create(): Response
     {
         return Inertia::render('admin/knowledge-base/create', [
-            'classificationOptions' => $this->classificationOptions(),
+            'indicatorSuggestions' => array_values(ScreeningRequest::INDICATORS),
+            'classificationOptions' => array_column(ScreeningCategory::cases(), 'value'),
         ]);
     }
 
-    /**
-     * Simpan aturan baru di dalam transaksi (Req 12.2, 12.3, 12.4).
-     */
     public function store(KnowledgeBaseRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        $rule = new KnowledgeBaseRule();
+        $rule->slug = $this->uniqueSlug($data['indicator']);
+        $rule->indicator = $data['indicator'];
+        $rule->weight = $data['weight'];
+        $rule->classification_mapping = $data['classification_mapping'];
 
-        try {
-            DB::transaction(function () use ($data): void {
-                KnowledgeBaseRule::create($data);
-            });
-        } catch (Throwable $e) {
-            Log::error('Gagal menyimpan aturan Basis_Pengetahuan', ['exception' => $e]);
-
-            return back()
-                ->withInput()
-                ->with('error', 'Gagal menyimpan aturan basis pengetahuan. Perubahan dibatalkan dan data sebelumnya dipertahankan.');
+        if ($request->hasFile('illustration')) {
+            $rule->illustration_path = $request->file('illustration')->store('knowledge-base', 'public');
         }
 
-        return redirect()
-            ->route('admin.basis-pengetahuan.index')
-            ->with('success', 'Aturan basis pengetahuan berhasil ditambahkan.');
+        $rule->save();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Aturan basis pengetahuan berhasil ditambahkan.']);
+
+        return to_route('admin.basis-pengetahuan.index');
     }
 
-    /**
-     * Tampilkan formulir ubah aturan.
-     */
     public function edit(KnowledgeBaseRule $basis_pengetahuan): Response
     {
         return Inertia::render('admin/knowledge-base/edit', [
-            'rule' => $basis_pengetahuan->only(['id', 'indicator', 'weight', 'classification_mapping']),
-            'classificationOptions' => $this->classificationOptions(),
+            'rule' => [
+                'id' => $basis_pengetahuan->id,
+                'indicator' => $basis_pengetahuan->indicator,
+                'weight' => $basis_pengetahuan->weight,
+                'classification_mapping' => $basis_pengetahuan->classification_mapping,
+                'illustration_url' => $basis_pengetahuan->illustration_url,
+                'illustration_type' => $basis_pengetahuan->illustration_type,
+            ],
+            'indicatorSuggestions' => array_values(ScreeningRequest::INDICATORS),
+            'classificationOptions' => array_column(ScreeningCategory::cases(), 'value'),
         ]);
     }
 
-    /**
-     * Perbarui aturan di dalam transaksi (Req 12.2, 12.3, 12.4).
-     */
     public function update(KnowledgeBaseRequest $request, KnowledgeBaseRule $basis_pengetahuan): RedirectResponse
     {
         $data = $request->validated();
 
-        try {
-            DB::transaction(function () use ($basis_pengetahuan, $data): void {
-                $basis_pengetahuan->update($data);
-            });
-        } catch (Throwable $e) {
-            Log::error('Gagal memperbarui aturan Basis_Pengetahuan', ['exception' => $e]);
+        $basis_pengetahuan->indicator = $data['indicator'];
+        $basis_pengetahuan->weight = $data['weight'];
+        $basis_pengetahuan->classification_mapping = $data['classification_mapping'];
 
-            return back()
-                ->withInput()
-                ->with('error', 'Gagal menyimpan aturan basis pengetahuan. Perubahan dibatalkan dan data sebelumnya dipertahankan.');
+        if ($data['indicator'] !== $basis_pengetahuan->getOriginal('indicator')) {
+            $basis_pengetahuan->slug = $this->uniqueSlug($data['indicator'], $basis_pengetahuan->id);
         }
 
-        return redirect()
-            ->route('admin.basis-pengetahuan.index')
-            ->with('success', 'Aturan basis pengetahuan berhasil diperbarui.');
+        if ($request->hasFile('illustration')) {
+            if ($basis_pengetahuan->illustration_path) {
+                Storage::disk('public')->delete($basis_pengetahuan->illustration_path);
+            }
+            $basis_pengetahuan->illustration_path = $request->file('illustration')->store('knowledge-base', 'public');
+        } elseif ($request->boolean('remove_illustration') && $basis_pengetahuan->illustration_path) {
+            Storage::disk('public')->delete($basis_pengetahuan->illustration_path);
+            $basis_pengetahuan->illustration_path = null;
+        }
+
+        $basis_pengetahuan->save();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Aturan basis pengetahuan berhasil diperbarui.']);
+
+        return to_route('admin.basis-pengetahuan.index');
     }
 
-    /**
-     * Hapus aturan di dalam transaksi (Req 12.2, 12.3).
-     */
     public function destroy(KnowledgeBaseRule $basis_pengetahuan): RedirectResponse
     {
-        try {
-            DB::transaction(function () use ($basis_pengetahuan): void {
-                $basis_pengetahuan->delete();
-            });
-        } catch (Throwable $e) {
-            Log::error('Gagal menghapus aturan Basis_Pengetahuan', ['exception' => $e]);
+        $basis_pengetahuan->delete();
 
-            return back()
-                ->with('error', 'Gagal menghapus aturan basis pengetahuan. Perubahan dibatalkan dan data sebelumnya dipertahankan.');
-        }
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Aturan basis pengetahuan berhasil dihapus.']);
 
-        return redirect()
-            ->route('admin.basis-pengetahuan.index')
-            ->with('success', 'Aturan basis pengetahuan berhasil dihapus.');
+        return to_route('admin.basis-pengetahuan.index');
     }
 
     /**
-     * Daftar nilai pemetaan klasifikasi yang valid untuk pilihan formulir.
-     *
-     * @return list<string>
+     * Bangun slug unik (dengan sufiks numerik bila perlu) dari label indikator.
      */
-    private function classificationOptions(): array
+    private function uniqueSlug(string $indicator, ?int $ignoreId = null): string
     {
-        return array_column(ScreeningCategory::cases(), 'value');
+        $base = Str::slug($indicator, '_');
+
+        if ($base === '') {
+            $base = 'indikator';
+        }
+
+        $slug = $base;
+        $suffix = 1;
+
+        while (
+            KnowledgeBaseRule::query()
+                ->where('slug', $slug)
+                ->when($ignoreId !== null, fn ($query) => $query->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $slug = $base.'_'.$suffix;
+            $suffix++;
+        }
+
+        return $slug;
     }
 }

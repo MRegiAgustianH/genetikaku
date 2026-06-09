@@ -21,12 +21,7 @@ class MediaController extends Controller
         'screening_illustration' => 'Ilustrasi Halaman Prediksi/Skrining',
     ];
 
-    /**
-     * Tampilkan daftar aset media terkelola.
-     *
-     * Memastikan baris placeholder ada untuk setiap key terkelola (mis.
-     * 'screening_illustration') sehingga Admin selalu punya entri untuk diedit.
-     */
+    
     public function index(): Response
     {
         $assets = collect(self::MANAGED)
@@ -52,13 +47,7 @@ class MediaController extends Controller
         ]);
     }
 
-    /**
-     * Perbarui aset media berdasarkan key.
-     *
-     * Berkas opsional: bila diunggah, berkas lama dihapus dan tipe diturunkan
-     * dari mime (gif => 'gif', video/* => 'video', selain itu 'image'). Teks
-     * alternatif selalu dapat diperbarui.
-     */
+    
     public function update(MediaAssetRequest $request, string $key): RedirectResponse
     {
         $asset = MediaAsset::query()->firstOrNew(['key' => $key]);
@@ -81,10 +70,7 @@ class MediaController extends Controller
         return back();
     }
 
-    /**
-     * Turunkan tipe media dari mime/ekstensi: gif => 'gif', video/* => 'video',
-     * selain itu 'image'.
-     */
+    
     private function deriveType(?string $mime, ?string $extension): string
     {
         $mime = (string) $mime;

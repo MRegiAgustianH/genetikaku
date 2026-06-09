@@ -9,6 +9,8 @@ interface PhenotypeEntry {
     id: number;
     category: string;
     value: string;
+    illustration_url: string | null;
+    illustration_type: 'image' | 'gif' | 'video' | null;
 }
 
 interface PhenotypeEditProps {
@@ -25,14 +27,22 @@ export default function PhenotypeEdit({
     phenotype,
     categories,
 }: PhenotypeEditProps) {
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, transform, post, processing, errors } = useForm<{
+        category: string;
+        value: string;
+        illustration: File | null;
+        remove_illustration: boolean;
+    }>({
         category: phenotype.category,
         value: phenotype.value,
+        illustration: null,
+        remove_illustration: false,
     });
 
     const submit = (event: React.FormEvent) => {
         event.preventDefault();
-        put(`/admin/fenotipe/${phenotype.id}`);
+        transform((current) => ({ ...current, _method: 'put' }));
+        post(`/admin/fenotipe/${phenotype.id}`, { forceFormData: true });
     };
 
     return (
@@ -79,6 +89,48 @@ export default function PhenotypeEdit({
                             placeholder="contoh: A, B, AB, O"
                         />
                         <InputError message={errors.value} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="illustration">Ilustrasi (gambar/video, opsional)</Label>
+                        {phenotype.illustration_url ? (
+                            <div className="flex items-center gap-3">
+                                {phenotype.illustration_type === 'video' ? (
+                                    <video
+                                        src={phenotype.illustration_url}
+                                        muted
+                                        loop
+                                        autoPlay
+                                        playsInline
+                                        className="h-16 w-16 rounded-md border object-cover"
+                                    />
+                                ) : (
+                                    <img
+                                        src={phenotype.illustration_url}
+                                        alt=""
+                                        className="h-16 w-16 rounded-md border object-cover"
+                                    />
+                                )}
+                                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <input
+                                        type="checkbox"
+                                        checked={data.remove_illustration}
+                                        onChange={(e) => setData('remove_illustration', e.target.checked)}
+                                    />
+                                    Hapus ilustrasi
+                                </label>
+                            </div>
+                        ) : null}
+                        <Input
+                            id="illustration"
+                            type="file"
+                            accept="image/*,video/mp4,video/webm"
+                            onChange={(e) => setData('illustration', e.target.files?.[0] ?? null)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Unggah untuk mengganti ilustrasi. Maks. 20 MB.
+                        </p>
+                        <InputError message={errors.illustration} />
                     </div>
 
                     <div className="flex items-center gap-4">

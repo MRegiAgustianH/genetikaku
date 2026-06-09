@@ -12,6 +12,12 @@ import { cn } from '@/lib/utils';
  */
 type PhenotypeOptions = Record<string, string[]>;
 
+/** Ilustrasi IMK per nilai: kategori => nilai => {url, type}. */
+type PhenotypeIllustrations = Record<
+    string,
+    Record<string, { url: string; type: 'image' | 'gif' | 'video' | null }>
+>;
+
 /** Hasil_Skrining Tahap 1 yang ditampilkan read-only (Req 2.3). */
 interface ScreeningSummary {
     father_name: string;
@@ -22,6 +28,7 @@ interface ScreeningSummary {
 
 interface PredictionFormProps {
     phenotypeOptions: PhenotypeOptions;
+    phenotypeIllustrations: PhenotypeIllustrations;
     screening: ScreeningSummary;
 }
 
@@ -70,7 +77,7 @@ const fieldName = (parent: ParentKey, suffix: FieldSuffix): PredictionFieldName 
  * Tahap 1 yang ditampilkan read-only. Mengirim 8 field fenotipe ke POST
  * /prediksi (route `prediksi.store`).
  */
-export default function PredictionFormPage({ phenotypeOptions, screening }: PredictionFormProps) {
+export default function PredictionFormPage({ phenotypeOptions, phenotypeIllustrations, screening }: PredictionFormProps) {
     const { data, setData, post, processing, errors } = useForm<PredictionForm>({
         father_blood: '',
         father_iris: '',
@@ -84,7 +91,7 @@ export default function PredictionFormPage({ phenotypeOptions, screening }: Pred
 
     // Refleksikan perubahan Data_Fenotipe terbaru tanpa muat ulang penuh (Req 13.2).
     useEffect(() => {
-        router.reload({ only: ['phenotypeOptions'] });
+        router.reload({ only: ['phenotypeOptions', 'phenotypeIllustrations'] });
     }, []);
 
     const submit = (event: FormEvent) => {
@@ -96,7 +103,7 @@ export default function PredictionFormPage({ phenotypeOptions, screening }: Pred
         <PublicLayout>
             <Head title="Prediksi Karakteristik Bayi" />
 
-            <section className="mx-auto max-w-3xl">
+            <section className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
                 <header>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-neutral-50">
                         Input Fenotipe Orang Tua
@@ -157,6 +164,10 @@ export default function PredictionFormPage({ phenotypeOptions, screening }: Pred
                                     const inputId = `${parent.key}-${suffix}`;
                                     const options = phenotypeOptions[category] ?? [];
                                     const error = errors[name];
+                                    const selected = data[name];
+                                    const media = selected
+                                        ? phenotypeIllustrations[category]?.[selected]
+                                        : undefined;
 
                                     return (
                                         <div key={suffix}>
@@ -190,6 +201,31 @@ export default function PredictionFormPage({ phenotypeOptions, screening }: Pred
                                                 ))}
                                             </select>
                                             <InputError id={`${inputId}-error`} message={error} />
+                                            {media ? (
+                                                <div className="mt-2 flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2 dark:border-neutral-800 dark:bg-neutral-900">
+                                                    {media.type === 'video' ? (
+                                                        <video
+                                                            src={media.url}
+                                                            autoPlay
+                                                            muted
+                                                            loop
+                                                            playsInline
+                                                            aria-hidden="true"
+                                                            className="h-14 w-14 shrink-0 rounded-md object-cover"
+                                                        />
+                                                    ) : (
+                                                        <img
+                                                            src={media.url}
+                                                            alt=""
+                                                            aria-hidden="true"
+                                                            className="h-14 w-14 shrink-0 rounded-md object-cover"
+                                                        />
+                                                    )}
+                                                    <span className="text-xs text-neutral-500 dark:text-neutral-400">
+                                                        Ilustrasi {category.toLowerCase()}: {selected}
+                                                    </span>
+                                                </div>
+                                            ) : null}
                                         </div>
                                     );
                                 })}

@@ -19,29 +19,26 @@ use App\Domain\ScreeningCategory;
  *
  * Setiap {@see KnowledgeBaseRule} memetakan satu Indikator_Skrining ke:
  *   - `weight`               : kontribusi skor saat indikator dijawab "ya".
- *   - `classificationMapping`: label kategori yang paling diasosiasikan dengan
- *                              indikator tersebut, salah satu dari
+ *   - `classificationMapping`: kategori yang DIINDIKASIKAN bila indikator
+ *                              tersebut dijawab afirmatif, salah satu dari
  *                              `Normal` | `Carrier` | `Berisiko Tinggi`.
  *
- * `classificationMapping` dipakai untuk MENURUNKAN ambang batas (threshold)
- * langsung dari Basis_Pengetahuan, bukan dari konstanta hard-coded:
- *   - `highRiskThreshold` = bobot TERKECIL di antara seluruh aturan yang
- *                           dipetakan ke `Berisiko Tinggi`.
- *   - `carrierThreshold`  = bobot TERKECIL di antara seluruh aturan yang
- *                           dipetakan ke `Carrier`.
- *
- * Konsekuensinya: mengiyakan satu indikator berisiko tinggi mana pun sudah
- * cukup membuat skor mencapai `highRiskThreshold`, sehingga orang tua tersebut
- * langsung diklasifikasikan `Berisiko Tinggi` — sesuai intuisi klinis bahwa
- * indikator kuat (mis. riwayat diagnosis) bersifat menentukan.
+ * `classificationMapping` menyatakan tingkat kategori yang diisyaratkan oleh
+ * indikator tersebut bila dijawab "ya". Indikator kuat (mis. riwayat diagnosis
+ * atau riwayat transfusi) dipetakan ke `Berisiko Tinggi`; indikator pendukung
+ * (mis. riwayat keluarga, anemia, kadar Hb rendah) dipetakan ke `Carrier`.
  *
  * ## Algoritma `classify`
- *   1. `score` = jumlah `weight` untuk setiap aturan yang indikatornya dijawab
- *      secara afirmatif pada `$answers`.
- *   2. Pemetaan (high-risk diperiksa lebih dulu agar fungsi tetap total):
- *        - `score >= highRiskThreshold`  -> Berisiko Tinggi
- *        - `score >= carrierThreshold`   -> Carrier
- *        - selain itu                    -> Normal
+ *   1. Bila ADA indikator ber-mapping `Berisiko Tinggi` yang dijawab afirmatif
+ *      -> langsung `Berisiko Tinggi` (indikator kuat bersifat menentukan).
+ *   2. Selain itu, jumlahkan `weight` indikator ber-mapping `Carrier` yang
+ *      dijawab afirmatif. Bila skornya >= `carrierThreshold` (bobot terkecil di
+ *      antara aturan `Carrier`) -> `Carrier`.
+ *   3. Selain itu -> `Normal`.
+ *
+ * Dengan demikian, mengiyakan beberapa indikator pendukung (carrier) TIDAK
+ * lagi otomatis menjadi `Berisiko Tinggi`; hanya indikator kuat yang menentukan
+ * kategori tertinggi.
  *
  * Fungsi selalu mengembalikan tepat satu {@see ScreeningCategory} dan
  * deterministik (idempoten) untuk masukan yang sama.
@@ -59,29 +56,32 @@ final class ScreeningEngine
      */
     public function classify(array $answers, array $rules): ScreeningCategory
     {
-        $score = 0;
-        $highRiskThreshold = null;
+        $hasHighRiskIndicator = false;
+        $carrierScore = 0;
         $carrierThreshold = null;
 
         foreach ($rules as $rule) {
-            if ($this->isAffirmative($answers[$rule->indicator] ?? null)) {
-                $score += $rule->weight;
-            }
-
             $mapping = $this->normalizeCategory($rule->classificationMapping);
+            $affirmative = $this->isAffirmative($answers[$rule->indicator] ?? null);
 
             if ($mapping === ScreeningCategory::BerisikoTinggi) {
-                $highRiskThreshold = $this->minOrValue($highRiskThreshold, $rule->weight);
+                if ($affirmative) {
+                    $hasHighRiskIndicator = true;
+                }
             } elseif ($mapping === ScreeningCategory::Carrier) {
                 $carrierThreshold = $this->minOrValue($carrierThreshold, $rule->weight);
+
+                if ($affirmative) {
+                    $carrierScore += $rule->weight;
+                }
             }
         }
 
-        if ($highRiskThreshold !== null && $score >= $highRiskThreshold) {
+        if ($hasHighRiskIndicator) {
             return ScreeningCategory::BerisikoTinggi;
         }
 
-        if ($carrierThreshold !== null && $score >= $carrierThreshold) {
+        if ($carrierThreshold !== null && $carrierScore >= $carrierThreshold) {
             return ScreeningCategory::Carrier;
         }
 

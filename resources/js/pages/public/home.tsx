@@ -25,11 +25,7 @@ interface HomeProps {
     disclaimerAvailable: boolean;
 }
 
-/**
- * Error boundary that guards disclaimer rendering. If the disclaimer subtree
- * throws while rendering, we surface a fallback and notify the parent so the
- * screening entry link can be withheld (Req 6.4).
- */
+
 class DisclaimerBoundary extends Component<
     { onFailure: () => void; fallback: ReactNode; children: ReactNode },
     { hasError: boolean }
@@ -53,10 +49,7 @@ class DisclaimerBoundary extends Component<
     }
 }
 
-/**
- * Renders the disclaimer text and reports a successful render to the parent
- * on mount, enabling the screening link.
- */
+
 function Disclaimer({ text, onRendered }: { text: string; onRendered: () => void }) {
     useEffect(() => {
         onRendered();
@@ -76,7 +69,6 @@ function Disclaimer({ text, onRendered }: { text: string; onRendered: () => void
     );
 }
 
-/** Per-step visual accent for the "how it works" flow (pastel, minimalis). */
 const STEP_STYLES: { icon: LucideIcon; gradient: string; ring: string; text: string }[] = [
     {
         icon: ClipboardList,
@@ -105,10 +97,10 @@ const STEP_STYLES: { icon: LucideIcon; gradient: string; ring: string; text: str
 ];
 
 export default function Home({ intro, highlights, disclaimer, disclaimerAvailable }: HomeProps) {
-    // Single source of truth for whether the disclaimer successfully rendered.
+    
     const [disclaimerRendered, setDisclaimerRendered] = useState(false);
 
-    // The screening flow may only be entered once the disclaimer is shown (Req 6.4).
+    
     const canStartScreening = disclaimerAvailable && disclaimerRendered;
 
     return (
@@ -267,7 +259,7 @@ export default function Home({ intro, highlights, disclaimer, disclaimerAvailabl
                     className="text-center text-3xl font-bold text-neutral-900 dark:text-neutral-50"
                 >
                     Bagaimana{' '}
-                    <span className="bg-gradient-to-r from-rose-400 to-violet-400 bg-clip-text text-transparent">
+                    <span className="text-rose-600 dark:text-rose-300">
                         GENETIKAKU
                     </span>{' '}
                     bekerja

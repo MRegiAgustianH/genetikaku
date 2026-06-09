@@ -2,28 +2,40 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Concerns\HasIllustration;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Aturan Basis_Pengetahuan skrining Thalassemia (Req 12).
+ *
+ * Memetakan satu indikator/ciri skrining ke bobot dan kategori yang
+ * diindikasikannya. Dipakai {@see \App\Services\ScreeningEngine} pada Tahap 1.
+ * Setiap indikator dapat memiliki ilustrasi (IMK) yang tampil di form skrining.
+ */
 class KnowledgeBaseRule extends Model
 {
-    /** @use HasFactory<\Database\Factories\KnowledgeBaseRuleFactory> */
-    use HasFactory;
+    use HasIllustration;
 
     /**
-     * The attributes that are mass assignable.
-     *
      * @var list<string>
      */
     protected $fillable = [
+        'slug',
         'indicator',
         'weight',
         'classification_mapping',
+        'illustration_path',
     ];
 
     /**
-     * Get the attributes that should be cast.
-     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'illustration_url',
+        'illustration_type',
+    ];
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

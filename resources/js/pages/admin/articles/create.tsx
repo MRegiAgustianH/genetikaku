@@ -8,11 +8,13 @@ import { Label } from '@/components/ui/label';
 export default function AdminArticlesCreate() {
     const { data, setData, post, processing, errors } = useForm<{
         title: string;
+        summary: string;
         content: string;
         status: string;
         image: File | null;
     }>({
         title: '',
+        summary: '',
         content: '',
         status: 'draft',
         image: null,
@@ -49,6 +51,19 @@ export default function AdminArticlesCreate() {
                     </div>
 
                     <div className="grid gap-2">
+                        <Label htmlFor="summary">Poin Utama (paragraf pembuka)</Label>
+                        <textarea
+                            id="summary"
+                            value={data.summary}
+                            onChange={(e) => setData('summary', e.target.value)}
+                            rows={4}
+                            placeholder="Ringkasan / poin utama yang tampil di kotak atas. Gunakan baris diawali '- ' untuk poin berbutir."
+                            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        />
+                        <InputError message={errors.summary} />
+                    </div>
+
+                    <div className="grid gap-2">
                         <Label htmlFor="content">Konten</Label>
                         <textarea
                             id="content"
@@ -56,6 +71,7 @@ export default function AdminArticlesCreate() {
                             onChange={(e) => setData('content', e.target.value)}
                             rows={12}
                             required
+                            placeholder={'Gunakan "## Judul Bagian" untuk membuat header & daftar "Pada Halaman Ini".'}
                             className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         />
                         <InputError message={errors.content} />

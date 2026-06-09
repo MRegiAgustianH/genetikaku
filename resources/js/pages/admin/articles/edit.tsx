@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 type ArticleData = {
     id: number;
     title: string;
+    summary: string | null;
     content: string;
     status: 'draft' | 'published';
     image_url: string | null;
@@ -16,11 +17,13 @@ type ArticleData = {
 export default function AdminArticlesEdit({ article }: { article: ArticleData }) {
     const { data, setData, transform, post, processing, errors } = useForm<{
         title: string;
+        summary: string;
         content: string;
         status: 'draft' | 'published';
         image: File | null;
     }>({
         title: article.title,
+        summary: article.summary ?? '',
         content: article.content,
         status: article.status,
         image: null,
@@ -58,6 +61,19 @@ export default function AdminArticlesEdit({ article }: { article: ArticleData })
                     </div>
 
                     <div className="grid gap-2">
+                        <Label htmlFor="summary">Poin Utama (paragraf pembuka)</Label>
+                        <textarea
+                            id="summary"
+                            value={data.summary}
+                            onChange={(e) => setData('summary', e.target.value)}
+                            rows={4}
+                            placeholder="Ringkasan / poin utama yang tampil di kotak atas. Gunakan baris diawali '- ' untuk poin berbutir."
+                            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        />
+                        <InputError message={errors.summary} />
+                    </div>
+
+                    <div className="grid gap-2">
                         <Label htmlFor="content">Konten</Label>
                         <textarea
                             id="content"
@@ -65,6 +81,7 @@ export default function AdminArticlesEdit({ article }: { article: ArticleData })
                             onChange={(e) => setData('content', e.target.value)}
                             rows={12}
                             required
+                            placeholder={'Gunakan "## Judul Bagian" untuk membuat header & daftar "Pada Halaman Ini".'}
                             className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         />
                         <InputError message={errors.content} />

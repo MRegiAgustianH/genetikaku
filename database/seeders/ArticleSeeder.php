@@ -6,18 +6,9 @@ use App\Models\Article;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
-/**
- * Seeder artikel edukasi GENETIKAKU.
- *
- * Mengisi 6 artikel terpublikasi seputar Thalassemia dan karakteristik fisik
- * (fenotipe) yang relevan dengan alur prediksi. Bersifat idempoten: memakai
- * updateOrCreate berdasarkan slug sehingga aman dijalankan berulang.
- */
+
 class ArticleSeeder extends Seeder
 {
-    /**
-     * @return list<array{title:string,content:string}>
-     */
     private function articles(): array
     {
         return [

@@ -31,7 +31,8 @@ class TrainingDataController extends Controller
     {
         $rows = TrainingData::query()
             ->latest('id')
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
         return Inertia::render('admin/training-data/index', [
             'rows' => $rows,

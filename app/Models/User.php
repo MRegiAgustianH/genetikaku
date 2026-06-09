@@ -17,14 +17,10 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
-    /** @use HasFactory<UserFactory> */
+    
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    
     protected function casts(): array
     {
         return [
@@ -35,9 +31,6 @@ class User extends Authenticatable implements PasskeyUser
         ];
     }
 
-    /**
-     * Determine if the user has the admin role.
-     */
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

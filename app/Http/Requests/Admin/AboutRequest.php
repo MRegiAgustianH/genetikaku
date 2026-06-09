@@ -7,23 +7,13 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class AboutRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * Otorisasi area admin ditangani oleh middleware `admin` pada grup route.
-     */
+    
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * Judul dan konten wajib diisi (Req 11.2).
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
+    
     public function rules(): array
     {
         return [
@@ -33,11 +23,7 @@ class AboutRequest extends FormRequest
         ];
     }
 
-    /**
-     * Get custom messages for validator errors.
-     *
-     * @return array<string, string>
-     */
+   
     public function messages(): array
     {
         return [

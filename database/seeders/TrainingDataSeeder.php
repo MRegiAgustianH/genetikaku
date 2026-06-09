@@ -5,69 +5,110 @@ namespace Database\Seeders;
 use App\Models\TrainingData;
 use Illuminate\Database\Seeder;
 
-/**
- * Seed Data_Latih awal untuk Mesin_Naive_Bayes (Req 14.1, 3.2).
- *
- * Semua nilai atribut diambil dari Data_Fenotipe (lihat PhenotypeFactory::values)
- * dan kategori Hasil_Skrining_Orang_Tua yang valid (Normal/Carrier/Berisiko Tinggi),
- * sehingga konsisten dengan Data_Fenotipe (Req 14.3).
- */
+
 class TrainingDataSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+    
+    private const ROW_COUNT = 160;
+
     public function run(): void
     {
-        // Baris deterministik representatif yang mencakup ketiga kelas risiko.
-        $rows = [
-            [
-                'father_blood' => 'A', 'father_iris' => 'Cokelat', 'father_hair' => 'Lurus', 'father_ear' => 'Terpisah', 'father_thalassemia' => 'Normal',
-                'mother_blood' => 'O', 'mother_iris' => 'Hitam', 'mother_hair' => 'Lurus', 'mother_ear' => 'Terpisah', 'mother_thalassemia' => 'Normal',
-                'baby_blood' => 'A', 'baby_iris' => 'Cokelat', 'baby_hair' => 'Lurus', 'baby_ear' => 'Terpisah', 'baby_thalassemia_risk' => 'Rendah',
-            ],
-            [
-                'father_blood' => 'B', 'father_iris' => 'Hitam', 'father_hair' => 'Bergelombang', 'father_ear' => 'Melekat', 'father_thalassemia' => 'Carrier',
-                'mother_blood' => 'A', 'mother_iris' => 'Cokelat', 'mother_hair' => 'Bergelombang', 'mother_ear' => 'Terpisah', 'mother_thalassemia' => 'Normal',
-                'baby_blood' => 'AB', 'baby_iris' => 'Cokelat', 'baby_hair' => 'Bergelombang', 'baby_ear' => 'Terpisah', 'baby_thalassemia_risk' => 'Sedang',
-            ],
-            [
-                'father_blood' => 'AB', 'father_iris' => 'Biru', 'father_hair' => 'Keriting', 'father_ear' => 'Melekat', 'father_thalassemia' => 'Berisiko Tinggi',
-                'mother_blood' => 'B', 'mother_iris' => 'Hijau', 'mother_hair' => 'Keriting', 'mother_ear' => 'Melekat', 'mother_thalassemia' => 'Carrier',
-                'baby_blood' => 'B', 'baby_iris' => 'Hijau', 'baby_hair' => 'Keriting', 'baby_ear' => 'Melekat', 'baby_thalassemia_risk' => 'Tinggi',
-            ],
-            [
-                'father_blood' => 'O', 'father_iris' => 'Cokelat', 'father_hair' => 'Lurus', 'father_ear' => 'Terpisah', 'father_thalassemia' => 'Normal',
-                'mother_blood' => 'O', 'mother_iris' => 'Cokelat', 'mother_hair' => 'Bergelombang', 'mother_ear' => 'Melekat', 'mother_thalassemia' => 'Carrier',
-                'baby_blood' => 'O', 'baby_iris' => 'Cokelat', 'baby_hair' => 'Lurus', 'baby_ear' => 'Terpisah', 'baby_thalassemia_risk' => 'Sedang',
-            ],
-            [
-                'father_blood' => 'A', 'father_iris' => 'Hitam', 'father_hair' => 'Bergelombang', 'father_ear' => 'Terpisah', 'father_thalassemia' => 'Carrier',
-                'mother_blood' => 'B', 'mother_iris' => 'Hitam', 'mother_hair' => 'Lurus', 'mother_ear' => 'Terpisah', 'mother_thalassemia' => 'Carrier',
-                'baby_blood' => 'AB', 'baby_iris' => 'Hitam', 'baby_hair' => 'Bergelombang', 'baby_ear' => 'Terpisah', 'baby_thalassemia_risk' => 'Tinggi',
-            ],
-            [
-                'father_blood' => 'B', 'father_iris' => 'Cokelat', 'father_hair' => 'Lurus', 'father_ear' => 'Melekat', 'father_thalassemia' => 'Normal',
-                'mother_blood' => 'AB', 'mother_iris' => 'Biru', 'mother_hair' => 'Bergelombang', 'mother_ear' => 'Terpisah', 'mother_thalassemia' => 'Normal',
-                'baby_blood' => 'B', 'baby_iris' => 'Cokelat', 'baby_hair' => 'Bergelombang', 'baby_ear' => 'Terpisah', 'baby_thalassemia_risk' => 'Rendah',
-            ],
-            [
-                'father_blood' => 'O', 'father_iris' => 'Hijau', 'father_hair' => 'Keriting', 'father_ear' => 'Melekat', 'father_thalassemia' => 'Berisiko Tinggi',
-                'mother_blood' => 'A', 'mother_iris' => 'Hitam', 'mother_hair' => 'Keriting', 'mother_ear' => 'Melekat', 'mother_thalassemia' => 'Berisiko Tinggi',
-                'baby_blood' => 'A', 'baby_iris' => 'Hitam', 'baby_hair' => 'Keriting', 'baby_ear' => 'Melekat', 'baby_thalassemia_risk' => 'Tinggi',
-            ],
-            [
-                'father_blood' => 'A', 'father_iris' => 'Cokelat', 'father_hair' => 'Lurus', 'father_ear' => 'Terpisah', 'father_thalassemia' => 'Normal',
-                'mother_blood' => 'A', 'mother_iris' => 'Cokelat', 'mother_hair' => 'Lurus', 'mother_ear' => 'Terpisah', 'mother_thalassemia' => 'Normal',
-                'baby_blood' => 'A', 'baby_iris' => 'Cokelat', 'baby_hair' => 'Lurus', 'baby_ear' => 'Terpisah', 'baby_thalassemia_risk' => 'Rendah',
-            ],
-        ];
+        // Benih tetap -> dataset deterministik & reproducible.
+        mt_srand(20240607);
 
-        foreach ($rows as $row) {
-            TrainingData::query()->create($row);
+        $blood = ['A', 'B', 'AB', 'O'];
+        $iris = ['Cokelat', 'Hitam', 'Biru', 'Hijau'];
+        $hair = ['Lurus', 'Bergelombang', 'Keriting'];
+        $ear = ['Melekat', 'Terpisah'];
+        $screening = ['Normal', 'Carrier', 'Berisiko Tinggi'];
+        $severity = ['Normal' => 0, 'Carrier' => 1, 'Berisiko Tinggi' => 2];
+
+        $rows = [];
+
+        for ($n = 0; $n < self::ROW_COUNT; $n++) {
+            $father = [
+                'blood' => $this->pick($blood),
+                'iris' => $this->pick($iris),
+                'hair' => $this->pick($hair),
+                'ear' => $this->pick($ear),
+                'thalassemia' => $this->pick($screening),
+            ];
+
+            $mother = [
+                'blood' => $this->pick($blood),
+                'iris' => $this->pick($iris),
+                'hair' => $this->pick($hair),
+                'ear' => $this->pick($ear),
+                'thalassemia' => $this->pick($screening),
+            ];
+
+           
+            $baby = [
+                'blood' => $this->inherit($father['blood'], $mother['blood']),
+                'iris' => $this->inherit($father['iris'], $mother['iris']),
+                'hair' => $this->inherit($father['hair'], $mother['hair']),
+                'ear' => $this->inherit($father['ear'], $mother['ear']),
+            ];
+
+            $risk = $this->riskFor(
+                $severity[$father['thalassemia']] + $severity[$mother['thalassemia']],
+            );
+
+            $rows[] = [
+                'father_blood' => $father['blood'],
+                'father_iris' => $father['iris'],
+                'father_hair' => $father['hair'],
+                'father_ear' => $father['ear'],
+                'father_thalassemia' => $father['thalassemia'],
+
+                'mother_blood' => $mother['blood'],
+                'mother_iris' => $mother['iris'],
+                'mother_hair' => $mother['hair'],
+                'mother_ear' => $mother['ear'],
+                'mother_thalassemia' => $mother['thalassemia'],
+
+                'baby_blood' => $baby['blood'],
+                'baby_iris' => $baby['iris'],
+                'baby_hair' => $baby['hair'],
+                'baby_ear' => $baby['ear'],
+                'baby_thalassemia_risk' => $risk,
+            ];
         }
 
-        // Tambahan baris acak yang tetap konsisten dengan Data_Fenotipe.
-        TrainingData::factory()->count(12)->create();
+        
+        foreach (array_chunk($rows, 50) as $chunk) {
+            TrainingData::query()->insert(
+                array_map(static fn (array $row): array => $row + [
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ], $chunk),
+            );
+        }
+
+        mt_srand(); // kembalikan RNG ke kondisi acak.
+    }
+
+    
+    private function pick(array $items): string
+    {
+        return $items[mt_rand(0, count($items) - 1)];
+    }
+
+    
+    private function inherit(string $fromFather, string $fromMother): string
+    {
+        return mt_rand(0, 1) === 0 ? $fromFather : $fromMother;
+    }
+
+    /**
+     * Petakan jumlah skor keparahan kedua orang tua ke Risiko_Thalassemia_Bayi.
+     */
+    private function riskFor(int $severitySum): string
+    {
+        return match (true) {
+            $severitySum <= 1 => 'Rendah',
+            $severitySum === 2 => 'Sedang',
+            default => 'Tinggi',
+        };
     }
 }

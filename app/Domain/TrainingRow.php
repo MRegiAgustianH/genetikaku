@@ -2,13 +2,6 @@
 
 namespace App\Domain;
 
-/**
- * DTO satu baris Data_Latih untuk Mesin_Naive_Bayes.
- *
- * Memuat atribut masukan (fenotipe + status thalassemia ayah & ibu) dan
- * variabel keluaran (fenotipe bayi + Risiko_Thalassemia_Bayi) sesuai ERD
- * tabel `training_data` (Req 14.1).
- */
 final readonly class TrainingRow
 {
     public function __construct(

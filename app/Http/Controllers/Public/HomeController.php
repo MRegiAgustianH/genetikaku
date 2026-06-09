@@ -24,16 +24,16 @@ class HomeController extends Controller
             .'Selalu konsultasikan kondisi Anda dengan dokter atau ahli genetika.';
 
         return Inertia::render('public/home', [
-            // Penjelasan ringkas tentang GENETIKAKU (Req 6.1)
+            
             'intro' => [
                 'name' => 'GENETIKAKU',
-                'tagline' => 'Skrining risiko Thalassemia & prediksi karakteristik bayi berbasis Naive Bayes.',
+                'tagline' => 'Prediksi risiko Thalassemia & prediksi karakteristik bayi berbasis Naive Bayes.',
                 'description' => 'GENETIKAKU membantu calon orang tua melakukan skrining risiko Thalassemia '
                     .'serta memperkirakan karakteristik fisik bayi berdasarkan data fenotipe kedua orang tua. '
                     .'Sistem memandu Anda melalui empat tahap: skrining risiko, input fenotipe, '
                     .'perhitungan Naive Bayes, dan penyajian hasil beserta edukasi.',
             ],
-            // Sorotan alur empat tahap untuk konteks pengguna
+            
             'highlights' => [
                 [
                     'title' => 'Skrining Thalassemia',
@@ -52,9 +52,9 @@ class HomeController extends Controller
                     'description' => 'Lihat prediksi karakteristik bayi, risiko Thalassemia, dan penjelasan edukatif.',
                 ],
             ],
-            // Pernyataan penyangkalan (Req 6.3)
+            
             'disclaimer' => $disclaimer,
-            // Sinyal ketersediaan disclaimer untuk menggerbang tautan skrining (Req 6.4)
+        
             'disclaimerAvailable' => $disclaimer !== '',
         ]);
     }

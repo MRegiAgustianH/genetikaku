@@ -15,7 +15,7 @@ interface ArticlesIndexProps {
     articles: ArticleListItem[];
 }
 
-/** Rotating soft pastel fallbacks for cards without a cover image. */
+
 const FALLBACK_GRADIENTS = [
     'from-violet-50 to-rose-50',
     'from-rose-50 to-violet-50',

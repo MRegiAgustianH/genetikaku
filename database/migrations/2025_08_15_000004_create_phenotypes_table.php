@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('category');
             $table->string('value');
+            $table->string('illustration_path')->nullable();
             $table->timestamps();
         });
     }

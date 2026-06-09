@@ -1,7 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'motion/react';
-import { Dna, Stethoscope } from 'lucide-react';
-import type { FormEvent } from 'react';
+import { Stethoscope } from 'lucide-react';
+import { useState, type FormEvent } from 'react';
 
 import InputError from '@/components/input-error';
 import PublicLayout from '@/layouts/public-layout';
@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils';
 interface Indicator {
     key: string;
     label: string;
+    illustration_url: string | null;
+    illustration_type: 'image' | 'gif' | 'video' | null;
 }
 
 interface Illustration {
@@ -18,9 +20,7 @@ interface Illustration {
 }
 
 interface ScreeningProps {
-    /** Daftar Indikator_Skrining {key,label} dari ScreeningController (Req 1.1). */
     indicators: Indicator[];
-    /** Ilustrasi IMK opsional yang ditampilkan di samping/atas formulir. */
     illustration: Illustration | null;
 }
 
@@ -49,56 +49,44 @@ function buildAnswers(indicators: Indicator[]): IndicatorAnswers {
 }
 
 /**
- * Renders the optional IMK illustration. Uses a muted autoplay loop <video> for
- * the 'video' type, otherwise an <img> (covers 'image' and 'gif'). When no
- * illustration is provided, shows a tasteful gradient placeholder (not an error).
+ * Ilustrasi bawaan yang ditampilkan bila admin belum mengunggah aset khusus.
+ * Memakai aset statis yang dibundel di public/images sehingga selalu tampil.
  */
+const DEFAULT_ILLUSTRATION = '/images/banner-thalassemia.webp';
+
+
 function IllustrationPanel({ illustration }: { illustration: Illustration | null }) {
-    if (illustration) {
+    if (illustration && illustration.type === 'video') {
         return (
             <div className="overflow-hidden rounded-2xl border border-rose-100 bg-rose-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-                {illustration.type === 'video' ? (
-                    <video
-                        src={illustration.url}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        aria-hidden="true"
-                        className="h-full w-full object-cover"
-                    />
-                ) : (
-                    <img
-                        src={illustration.url}
-                        alt=""
-                        aria-hidden="true"
-                        className="h-full w-full object-cover"
-                    />
-                )}
+                <video
+                    src={illustration.url}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    aria-hidden="true"
+                    className="h-full w-full object-cover"
+                />
             </div>
         );
     }
 
+    const imageUrl = illustration?.url ?? DEFAULT_ILLUSTRATION;
+
     return (
-        <div className="flex min-h-56 flex-col items-center justify-center rounded-2xl border border-dashed border-rose-200 bg-gradient-to-br from-rose-50 to-violet-50 p-8 text-center dark:border-neutral-800 dark:from-neutral-900 dark:to-neutral-900">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 text-rose-500 shadow-sm dark:bg-rose-950/40 dark:text-rose-300">
-                <Dna className="h-8 w-8" aria-hidden="true" />
-            </span>
-            <p className="mt-4 text-sm font-medium text-slate-600 dark:text-neutral-300">
-                Ilustrasi indikator prediksi
-            </p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-neutral-500">
-                Visualisasi akan tampil di sini saat tersedia.
-            </p>
+        <div className="overflow-hidden rounded-2xl border border-rose-100 bg-rose-50 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+            <img
+                src={imageUrl}
+                alt=""
+                aria-hidden="true"
+                className="h-full w-full object-cover"
+            />
         </div>
     );
 }
 
-/**
- * Halaman skrining Tahap 1 (Req 1.1): formulir Indikator_Skrining terpisah
- * untuk ayah dan ibu. Mengirim ke route `skrining.store` (POST /skrining) dan
- * menampilkan kesalahan validasi per field (father_name, father.<key>, dst).
- */
+
 export default function Screening({ indicators, illustration }: ScreeningProps) {
     const { data, setData, post, processing, errors } = useForm<ScreeningForm>({
         father_name: '',
@@ -112,9 +100,15 @@ export default function Screening({ indicators, illustration }: ScreeningProps) 
         post('/skrining');
     };
 
+    const [activeKey, setActiveKey] = useState<string | null>(null);
+
     const setIndicator = (parent: ParentKey, key: string, value: boolean) => {
         setData(parent, { ...data[parent], [key]: value });
+        // Tampilkan ilustrasi indikator yang baru saja diinteraksi pada panel.
+        setActiveKey(key);
     };
+
+    const activeIndicator = indicators.find((item) => item.key === activeKey) ?? null;
 
     return (
         <PublicLayout>
@@ -252,9 +246,51 @@ export default function Screening({ indicators, illustration }: ScreeningProps) 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.15 }}
-                        className="order-1 lg:order-2 lg:sticky lg:top-24 lg:self-start"
+                        className="order-1 self-start lg:order-2 sticky top-16 z-20 lg:top-24"
                     >
-                        <IllustrationPanel illustration={illustration} />
+                        {activeIndicator && activeIndicator.illustration_url ? (
+                            <div className="overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+                                {activeIndicator.illustration_type === 'video' ? (
+                                    <video
+                                        key={activeIndicator.key}
+                                        src={activeIndicator.illustration_url}
+                                        autoPlay
+                                        muted
+                                        loop
+                                        playsInline
+                                        aria-hidden="true"
+                                        className="aspect-video max-h-40 w-full object-cover sm:max-h-56 lg:max-h-none"
+                                    />
+                                ) : (
+                                    <img
+                                        key={activeIndicator.key}
+                                        src={activeIndicator.illustration_url}
+                                        alt=""
+                                        aria-hidden="true"
+                                        className="aspect-video max-h-40 w-full object-cover sm:max-h-56 lg:max-h-none"
+                                    />
+                                )}
+                                <div className="p-4">
+                                    <p className="text-sm font-semibold text-slate-800 dark:text-neutral-100">
+                                        {activeIndicator.label}
+                                    </p>
+                                    <p className="mt-1 text-xs text-slate-500 dark:text-neutral-400">
+                                        Ilustrasi indikator yang sedang Anda tinjau.
+                                    </p>
+                                </div>
+                            </div>
+                        ) : activeIndicator ? (
+                            <div className="flex min-h-56 flex-col items-center justify-center rounded-2xl border border-dashed border-rose-200 bg-gradient-to-br from-rose-50 to-violet-50 p-8 text-center dark:border-neutral-800 dark:from-neutral-900 dark:to-neutral-900">
+                                <p className="text-sm font-medium text-slate-600 dark:text-neutral-300">
+                                    {activeIndicator.label}
+                                </p>
+                                <p className="mt-1 text-xs text-slate-500 dark:text-neutral-500">
+                                    Belum ada ilustrasi untuk indikator ini.
+                                </p>
+                            </div>
+                        ) : (
+                            <IllustrationPanel illustration={illustration} />
+                        )}
                     </motion.aside>
                 </div>
             </div>

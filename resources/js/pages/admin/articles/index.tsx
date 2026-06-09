@@ -7,6 +7,7 @@ type ArticleListItem = {
     title: string;
     slug: string;
     status: 'draft' | 'published';
+    image_url: string | null;
 };
 
 export default function AdminArticlesIndex({
@@ -48,6 +49,7 @@ export default function AdminArticlesIndex({
                         <table className="w-full text-left text-sm">
                             <thead className="border-b bg-muted/50">
                                 <tr>
+                                    <th className="px-4 py-3 font-medium">Gambar</th>
                                     <th className="px-4 py-3 font-medium">Judul</th>
                                     <th className="px-4 py-3 font-medium">Status</th>
                                     <th className="px-4 py-3 text-right font-medium">Aksi</th>
@@ -56,6 +58,19 @@ export default function AdminArticlesIndex({
                             <tbody>
                                 {articles.map((article) => (
                                     <tr key={article.id} className="border-b last:border-0">
+                                        <td className="px-4 py-3">
+                                            {article.image_url ? (
+                                                <img
+                                                    src={article.image_url}
+                                                    alt=""
+                                                    className="h-12 w-16 rounded-md border object-cover"
+                                                />
+                                            ) : (
+                                                <span className="flex h-12 w-16 items-center justify-center rounded-md border border-dashed text-[10px] text-muted-foreground">
+                                                    —
+                                                </span>
+                                            )}
+                                        </td>
                                         <td className="px-4 py-3">{article.title}</td>
                                         <td className="px-4 py-3">
                                             <Badge

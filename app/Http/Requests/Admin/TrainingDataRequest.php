@@ -29,11 +29,7 @@ use Illuminate\Validation\Rule;
  */
 class TrainingDataRequest extends FormRequest
 {
-    /**
-     * Pemetaan kolom fenotipe -> PhenotypeCategory yang berlaku.
-     *
-     * @var array<string, PhenotypeCategory>
-     */
+    
     private const PHENOTYPE_COLUMNS = [
         'father_blood' => PhenotypeCategory::GolonganDarah,
         'father_iris' => PhenotypeCategory::WarnaIris,
@@ -49,23 +45,13 @@ class TrainingDataRequest extends FormRequest
         'baby_ear' => PhenotypeCategory::BentukCuping,
     ];
 
-    /**
-     * Otorisasi ditangani oleh middleware `admin` pada grup route.
-     */
+    
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Aturan validasi yang berlaku untuk request.
-     *
-     * Daftar nilai fenotipe yang diizinkan dibangun dari Data_Fenotipe terkini
-     * (satu query, dikelompokkan per kategori) agar penolakan nilai di luar
-     * registry konsisten dengan Mesin_Naive_Bayes.
-     *
-     * @return array<string, list<ValidationRule|string>>
-     */
+    
     public function rules(): array
     {
         $allowedByCategory = $this->allowedPhenotypeValues();
@@ -95,11 +81,7 @@ class TrainingDataRequest extends FormRequest
         return $rules;
     }
 
-    /**
-     * Pesan kesalahan kustom: nilai di luar registry ditolak dengan jelas.
-     *
-     * @return array<string, string>
-     */
+    
     public function messages(): array
     {
         $messages = [];
@@ -115,11 +97,7 @@ class TrainingDataRequest extends FormRequest
         return $messages;
     }
 
-    /**
-     * Nama atribut yang lebih manusiawi untuk pesan kesalahan.
-     *
-     * @return array<string, string>
-     */
+    
     public function attributes(): array
     {
         return [
@@ -141,11 +119,7 @@ class TrainingDataRequest extends FormRequest
         ];
     }
 
-    /**
-     * Bangun daftar nilai fenotipe valid per kategori dari Data_Fenotipe terkini.
-     *
-     * @return array<string, list<string>>
-     */
+    
     private function allowedPhenotypeValues(): array
     {
         $allowed = [];

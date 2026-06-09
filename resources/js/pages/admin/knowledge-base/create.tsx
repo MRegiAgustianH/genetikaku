@@ -1,108 +1,133 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import InputError from '@/components/input-error';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import type { BreadcrumbItem } from '@/types';
 
-interface KnowledgeBaseCreateProps {
+interface CreateProps {
+    indicatorSuggestions: string[];
     classificationOptions: string[];
 }
 
-export default function KnowledgeBaseCreate({ classificationOptions }: KnowledgeBaseCreateProps) {
-    const { data, setData, post, processing, errors } = useForm({
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Basis Pengetahuan', href: '/admin/basis-pengetahuan' },
+    { title: 'Tambah', href: '/admin/basis-pengetahuan/create' },
+];
+
+const selectClass =
+    'flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm';
+
+export default function KnowledgeBaseCreate({
+    indicatorSuggestions,
+    classificationOptions,
+}: CreateProps) {
+    const { data, setData, post, processing, errors } = useForm<{
+        indicator: string;
+        weight: number;
+        classification_mapping: string;
+        illustration: File | null;
+    }>({
         indicator: '',
-        weight: 0,
-        classification_mapping: classificationOptions[0] ?? '',
+        weight: 1,
+        classification_mapping: '',
+        illustration: null,
     });
 
-    const submit: FormEventHandler = (e) => {
-        e.preventDefault();
-        post('/admin/basis-pengetahuan');
+    const submit = (event: React.FormEvent) => {
+        event.preventDefault();
+        post('/admin/basis-pengetahuan', { forceFormData: true });
     };
 
     return (
         <>
-            <Head title="Tambah Aturan Basis Pengetahuan" />
-            <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-4">
+            <Head title="Tambah Aturan" />
+
+            <div className="flex h-full flex-1 flex-col gap-6 p-4">
                 <div>
-                    <h1 className="text-2xl font-semibold">Tambah Aturan</h1>
-                    <p className="text-muted-foreground">
-                        Tambahkan aturan indikator skrining baru ke basis pengetahuan.
+                    <h1 className="text-2xl font-semibold tracking-tight">Tambah Aturan</h1>
+                    <p className="text-sm text-muted-foreground">
+                        Tentukan bobot dan kategori untuk sebuah indikator skrining. Anda dapat
+                        menambahkan indikator/ciri baru di luar daftar bawaan.
                     </p>
                 </div>
 
                 <form onSubmit={submit} className="max-w-xl space-y-6">
-                    <div className="space-y-2">
-                        <label htmlFor="indicator" className="block text-sm font-medium">
-                            Indikator
-                        </label>
-                        <input
+                    <div className="grid gap-2">
+                        <Label htmlFor="indicator">Indikator / Ciri</Label>
+                        <Input
                             id="indicator"
-                            type="text"
+                            list="indicator-suggestions"
                             value={data.indicator}
                             onChange={(e) => setData('indicator', e.target.value)}
-                            className="w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
-                            autoFocus
+                            placeholder="contoh: Riwayat anemia"
                         />
-                        {errors.indicator && (
-                            <p className="text-sm text-red-600 dark:text-red-400">{errors.indicator}</p>
-                        )}
+                        <datalist id="indicator-suggestions">
+                            {indicatorSuggestions.map((indicator) => (
+                                <option key={indicator} value={indicator} />
+                            ))}
+                        </datalist>
+                        <InputError message={errors.indicator} />
                     </div>
 
-                    <div className="space-y-2">
-                        <label htmlFor="weight" className="block text-sm font-medium">
-                            Bobot
-                        </label>
-                        <input
+                    <div className="grid gap-2">
+                        <Label htmlFor="weight">Bobot</Label>
+                        <Input
                             id="weight"
                             type="number"
                             min={0}
                             value={data.weight}
                             onChange={(e) => setData('weight', Number(e.target.value))}
-                            className="w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
                         />
-                        {errors.weight && (
-                            <p className="text-sm text-red-600 dark:text-red-400">{errors.weight}</p>
-                        )}
+                        <InputError message={errors.weight} />
                     </div>
 
-                    <div className="space-y-2">
-                        <label htmlFor="classification_mapping" className="block text-sm font-medium">
-                            Pemetaan Klasifikasi
-                        </label>
+                    <div className="grid gap-2">
+                        <Label htmlFor="classification_mapping">Pemetaan Kategori</Label>
                         <select
                             id="classification_mapping"
                             value={data.classification_mapping}
                             onChange={(e) => setData('classification_mapping', e.target.value)}
-                            className="w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
+                            className={selectClass}
                         >
+                            <option value="">Pilih kategori</option>
                             {classificationOptions.map((option) => (
                                 <option key={option} value={option}>
                                     {option}
                                 </option>
                             ))}
                         </select>
-                        {errors.classification_mapping && (
-                            <p className="text-sm text-red-600 dark:text-red-400">
-                                {errors.classification_mapping}
-                            </p>
-                        )}
+                        <InputError message={errors.classification_mapping} />
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="inline-flex min-h-11 items-center rounded-md bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-700 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:outline-none disabled:opacity-50"
-                        >
+                    <div className="grid gap-2">
+                        <Label htmlFor="illustration">Ilustrasi (gambar/video, opsional)</Label>
+                        <Input
+                            id="illustration"
+                            type="file"
+                            accept="image/*,video/mp4,video/webm"
+                            onChange={(e) => setData('illustration', e.target.files?.[0] ?? null)}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Ditampilkan di samping indikator pada form skrining. Maks. 20 MB.
+                        </p>
+                        <InputError message={errors.illustration} />
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <Button type="submit" disabled={processing}>
                             Simpan
-                        </button>
-                        <Link
-                            href="/admin/basis-pengetahuan"
-                            className="inline-flex min-h-11 items-center rounded-md border px-4 py-2 text-sm font-medium transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
-                        >
-                            Batal
-                        </Link>
+                        </Button>
+                        <Button variant="outline" asChild>
+                            <Link href="/admin/basis-pengetahuan">Batal</Link>
+                        </Button>
                     </div>
                 </form>
             </div>
         </>
     );
 }
+
+KnowledgeBaseCreate.layout = {
+    breadcrumbs,
+};

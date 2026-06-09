@@ -8,38 +8,24 @@ use Illuminate\Validation\Rule;
 
 class ArticleRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * Otorisasi area admin ditangani oleh middleware `admin` pada grup route.
-     */
+    
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * Judul dan konten wajib; status dibatasi pada draft/published (Req 10.4).
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
+    
     public function rules(): array
     {
         return [
             'title' => ['required', 'string', 'max:255'],
+            'summary' => ['nullable', 'string'],
             'content' => ['required', 'string'],
             'status' => ['required', Rule::in(['draft', 'published'])],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ];
     }
 
-    /**
-     * Get custom messages for validator errors.
-     *
-     * @return array<string, string>
-     */
     public function messages(): array
     {
         return [

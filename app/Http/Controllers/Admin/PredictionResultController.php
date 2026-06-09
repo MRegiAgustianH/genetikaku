@@ -8,20 +8,10 @@ use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
-/**
- * Manajemen Hasil_Prediksi tersimpan (Req 15).
- *
- * Read-only kecuali penghapusan: index menampilkan daftar Hasil_Prediksi
- * beserta hasil fisik, risiko Thalassemia, dan probabilitas (Req 15.1);
- * show menampilkan detail lengkap termasuk Hasil_Skrining terkait (Req 15.2);
- * destroy menghapus record dari daftar (Req 15.3).
- */
+
 class PredictionResultController extends Controller
 {
-    /**
-     * Daftar Hasil_Prediksi tersimpan beserta hasil fisik, hasil Thalassemia,
-     * dan probabilitas (Req 15.1). Hasil_Skrining di-eager-load untuk konteks.
-     */
+    
     public function index(): Response
     {
         $results = PredictionResult::query()
@@ -48,10 +38,7 @@ class PredictionResultController extends Controller
         ]);
     }
 
-    /**
-     * Detail lengkap satu Hasil_Prediksi termasuk Hasil_Skrining terkait
-     * (Req 15.2).
-     */
+    
     public function show(PredictionResult $hasilPrediksi): Response
     {
         $hasilPrediksi->load('screeningResult');

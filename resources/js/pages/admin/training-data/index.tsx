@@ -2,8 +2,24 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import type { TrainingRow } from './training-data-form';
 
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface Paginator<T> {
+    data: T[];
+    links: PaginationLink[];
+    from: number | null;
+    to: number | null;
+    total: number;
+    current_page: number;
+    last_page: number;
+}
+
 interface IndexProps {
-    rows: TrainingRow[];
+    rows: Paginator<TrainingRow>;
 }
 
 const COLUMNS: { key: keyof TrainingRow; label: string }[] = [
@@ -42,76 +58,110 @@ export default function TrainingDataIndex({ rows }: IndexProps) {
                             Baris Data_Latih yang dipakai Mesin Naive Bayes.
                         </p>
                     </div>
-                    <Button asChild>
-                        <Link href="/admin/data-latih/create">Tambah Baris</Link>
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button variant="outline" asChild>
+                            <Link href="/admin/data-latih/import">Impor CSV</Link>
+                        </Button>
+                        <Button asChild>
+                            <Link href="/admin/data-latih/create">Tambah Baris</Link>
+                        </Button>
+                    </div>
                 </div>
 
-                {rows.length === 0 ? (
+                {rows.data.length === 0 ? (
                     <div className="rounded-lg border border-dashed border-sidebar-border/70 p-10 text-center dark:border-sidebar-border">
                         <p className="text-muted-foreground">
                             Belum ada Data Latih. Tambahkan baris pertama.
                         </p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto rounded-lg border border-sidebar-border/70 dark:border-sidebar-border">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-muted/50">
-                                <tr>
-                                    {COLUMNS.map((col) => (
-                                        <th
-                                            key={col.key}
-                                            className="whitespace-nowrap px-3 py-2 font-medium"
-                                        >
-                                            {col.label}
-                                        </th>
-                                    ))}
-                                    <th className="px-3 py-2 font-medium">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {rows.map((row) => (
-                                    <tr
-                                        key={row.id}
-                                        className="border-t border-sidebar-border/70 dark:border-sidebar-border"
-                                    >
+                    <>
+                        <div className="overflow-x-auto rounded-lg border border-sidebar-border/70 dark:border-sidebar-border">
+                            <table className="w-full text-left text-sm">
+                                <thead className="bg-muted/50">
+                                    <tr>
                                         {COLUMNS.map((col) => (
-                                            <td
+                                            <th
                                                 key={col.key}
-                                                className="whitespace-nowrap px-3 py-2"
+                                                className="whitespace-nowrap px-3 py-2 font-medium"
                                             >
-                                                {row[col.key]}
-                                            </td>
+                                                {col.label}
+                                            </th>
                                         ))}
-                                        <td className="whitespace-nowrap px-3 py-2">
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    asChild
-                                                    size="sm"
-                                                    variant="outline"
-                                                >
-                                                    <Link
-                                                        href={`/admin/data-latih/${row.id}/edit`}
-                                                    >
-                                                        Ubah
-                                                    </Link>
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="destructive"
-                                                    onClick={() =>
-                                                        handleDelete(row.id)
-                                                    }
-                                                >
-                                                    Hapus
-                                                </Button>
-                                            </div>
-                                        </td>
+                                        <th className="px-3 py-2 font-medium">Aksi</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    {rows.data.map((row) => (
+                                        <tr
+                                            key={row.id}
+                                            className="border-t border-sidebar-border/70 dark:border-sidebar-border"
+                                        >
+                                            {COLUMNS.map((col) => (
+                                                <td
+                                                    key={col.key}
+                                                    className="whitespace-nowrap px-3 py-2"
+                                                >
+                                                    {row[col.key]}
+                                                </td>
+                                            ))}
+                                            <td className="whitespace-nowrap px-3 py-2">
+                                                <div className="flex gap-2">
+                                                    <Button
+                                                        asChild
+                                                        size="sm"
+                                                        variant="outline"
+                                                    >
+                                                        <Link
+                                                            href={`/admin/data-latih/${row.id}/edit`}
+                                                        >
+                                                            Ubah
+                                                        </Link>
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="destructive"
+                                                        onClick={() =>
+                                                            handleDelete(row.id)
+                                                        }
+                                                    >
+                                                        Hapus
+                                                    </Button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <p className="text-sm text-muted-foreground">
+                                Menampilkan {rows.from ?? 0}–{rows.to ?? 0} dari{' '}
+                                {rows.total} baris
+                            </p>
+                            {rows.last_page > 1 ? (
+                                <nav className="flex flex-wrap items-center gap-1" aria-label="Navigasi halaman">
+                                    {rows.links.map((link, index) => (
+                                        <Button
+                                            key={index}
+                                            size="sm"
+                                            variant={link.active ? 'default' : 'outline'}
+                                            disabled={link.url === null}
+                                            onClick={() =>
+                                                link.url &&
+                                                router.visit(link.url, {
+                                                    preserveScroll: true,
+                                                    preserveState: true,
+                                                })
+                                            }
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
+                                    ))}
+                                </nav>
+                            ) : null}
+                        </div>
+                    </>
                 )}
             </div>
         </>

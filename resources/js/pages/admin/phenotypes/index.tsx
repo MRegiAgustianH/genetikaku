@@ -6,6 +6,8 @@ interface PhenotypeEntry {
     id: number;
     category: string;
     value: string;
+    illustration_url: string | null;
+    illustration_type: 'image' | 'gif' | 'video' | null;
 }
 
 interface PhenotypeIndexProps {
@@ -15,6 +17,38 @@ interface PhenotypeIndexProps {
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Data Fenotipe', href: '/admin/fenotipe' },
 ];
+
+/** Thumbnail preview ilustrasi (gambar/gif/video) atau placeholder bila kosong. */
+function IllustrationPreview({
+    url,
+    type,
+}: {
+    url: string | null;
+    type: 'image' | 'gif' | 'video' | null;
+}) {
+    if (!url) {
+        return (
+            <span className="flex h-12 w-12 items-center justify-center rounded-md border border-dashed text-[10px] text-muted-foreground">
+                —
+            </span>
+        );
+    }
+
+    if (type === 'video') {
+        return (
+            <video
+                src={url}
+                muted
+                loop
+                autoPlay
+                playsInline
+                className="h-12 w-12 rounded-md border object-cover"
+            />
+        );
+    }
+
+    return <img src={url} alt="" className="h-12 w-12 rounded-md border object-cover" />;
+}
 
 export default function PhenotypeIndex({ phenotypes }: PhenotypeIndexProps) {
     const handleDelete = (entry: PhenotypeEntry) => {
@@ -67,6 +101,9 @@ export default function PhenotypeIndex({ phenotypes }: PhenotypeIndexProps) {
                                     <th scope="col" className="px-4 py-3 font-medium">
                                         Nilai
                                     </th>
+                                    <th scope="col" className="px-4 py-3 font-medium">
+                                        Ilustrasi
+                                    </th>
                                     <th
                                         scope="col"
                                         className="px-4 py-3 text-right font-medium"
@@ -86,6 +123,12 @@ export default function PhenotypeIndex({ phenotypes }: PhenotypeIndexProps) {
                                         </td>
                                         <td className="px-4 py-3">
                                             {entry.value}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <IllustrationPreview
+                                                url={entry.illustration_url}
+                                                type={entry.illustration_type}
+                                            />
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex justify-end gap-2">

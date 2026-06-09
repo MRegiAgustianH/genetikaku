@@ -10,9 +10,7 @@ use Inertia\Inertia;
 
 class ArticleController extends Controller
 {
-    /**
-     * Tampilkan daftar artikel yang dipublikasikan (Req 7.1).
-     */
+    
     public function index()
     {
         $articles = Article::query()
@@ -32,12 +30,7 @@ class ArticleController extends Controller
         ]);
     }
 
-    /**
-     * Tampilkan detail satu artikel terpublikasi (Req 7.2).
-     *
-     * Jika artikel tidak ada atau berstatus draft, kembalikan halaman
-     * "tidak ditemukan" dengan HTTP 404 (Req 7.3).
-     */
+    
     public function show(Request $request, string $slug)
     {
         $article = Article::query()
@@ -51,12 +44,27 @@ class ArticleController extends Controller
             ])->toResponse($request)->setStatusCode(404);
         }
 
+        $related = Article::query()
+            ->where('status', 'published')
+            ->where('id', '!=', $article->id)
+            ->orderByDesc('id')
+            ->limit(4)
+            ->get(['title', 'slug'])
+            ->map(fn (Article $item) => [
+                'title' => $item->title,
+                'slug' => $item->slug,
+            ])
+            ->values();
+
         return Inertia::render('public/articles/show', [
             'article' => [
                 'title' => $article->title,
+                'summary' => $article->summary,
                 'content' => $article->content,
                 'image_url' => $article->image_url,
+                'published_at' => optional($article->created_at)->translatedFormat('d F Y'),
             ],
+            'related' => $related,
         ]);
     }
 }

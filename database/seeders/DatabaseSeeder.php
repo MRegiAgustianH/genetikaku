@@ -17,7 +17,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Contoh user admin (Req 9.x) untuk mengakses area administrasi.
         User::query()->updateOrCreate(
             ['email' => 'admin@genetikaku.test'],
             [
@@ -28,7 +27,6 @@ class DatabaseSeeder extends Seeder
             ],
         );
 
-        // Contoh user publik biasa.
         User::query()->updateOrCreate(
             ['email' => 'test@example.com'],
             [
@@ -41,12 +39,13 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             PhenotypeSeeder::class,
+            KnowledgeBaseSeeder::class,
             TrainingDataSeeder::class,
             ArticleSeeder::class,
+            AboutSeeder::class,
         ]);
 
-        // Baris placeholder untuk ilustrasi halaman skrining/prediksi. Path
-        // dibiarkan null agar admin dapat mengunggah media kapan saja.
+        
         MediaAsset::query()->updateOrCreate(
             ['key' => 'screening_illustration'],
             ['type' => 'image'],

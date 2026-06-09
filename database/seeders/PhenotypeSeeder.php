@@ -6,12 +6,7 @@ use App\Models\Phenotype;
 use Database\Factories\PhenotypeFactory;
 use Illuminate\Database\Seeder;
 
-/**
- * Seed Data_Fenotipe awal (Req 13.1, 2.2).
- *
- * Menanam nilai realistis per kategori fenotipe sebagai satu-satunya sumber
- * nilai valid pada form prediksi Tahap 2 dan validasi Data_Latih.
- */
+
 class PhenotypeSeeder extends Seeder
 {
     /**
