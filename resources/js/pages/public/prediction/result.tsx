@@ -1,8 +1,9 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import {
     Baby,
     BookOpen,
     CheckCircle2,
+    History,
     Droplet,
     Ear,
     Eye,
@@ -14,8 +15,10 @@ import {
     Workflow,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { useEffect } from 'react';
 
 import PublicLayout from '@/layouts/public-layout';
+import { addPredictionSessionEntry } from '@/lib/prediction-session-history';
 import { cn } from '@/lib/utils';
 
 /** Hasil_Skrining Tahap 1 terkait (konteks). */
@@ -223,8 +226,8 @@ function SectionCard({
 }
 
 const EDUCATION_ITEMS: { key: keyof EducationContent; title: string }[] = [
-    { key: 'method_explanation', title: 'Metode Naive Bayes' },
-    { key: 'two_stage_flow', title: 'Alur Dua Tahap' },
+    // { key: 'method_explanation', title: 'Metode Naive Bayes' },
+    // { key: 'two_stage_flow', title: 'Alur Dua Tahap' },
     { key: 'mendel_basis', title: 'Dasar Hukum Mendel' },
     { key: 'result_explanation', title: 'Penjelasan Hasil' },
     { key: 'thalassemia_info', title: 'Tentang Thalassemia' },
@@ -239,6 +242,7 @@ const METHOD_STEPS = [
 ];
 
 export default function PredictionResultPage({
+    predictionId,
     physical,
     thalassemiaRisk,
     probabilities,
@@ -247,6 +251,16 @@ export default function PredictionResultPage({
     disclaimer,
 }: PredictionResultProps) {
     const risk = riskMeta(thalassemiaRisk);
+
+    useEffect(() => {
+        addPredictionSessionEntry({
+            predictionId,
+            physical,
+            thalassemiaRisk,
+            probabilities,
+            screening,
+        });
+    }, [predictionId, physical, probabilities, screening, thalassemiaRisk]);
 
     return (
         <PublicLayout footer={<p>{disclaimer}</p>}>
@@ -277,18 +291,33 @@ export default function PredictionResultPage({
                                 </p>
                             </div>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => window.print()}
-                            className={cn(
-                                'inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-5 py-2.5 sm:w-auto print:hidden',
-                                'text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200 dark:hover:bg-rose-950/60',
-                                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400',
-                            )}
-                        >
-                            <Printer className="h-4 w-4" aria-hidden="true" />
-                            Cetak Hasil
-                        </button>
+                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                            <Link
+                                href="/prediksi/riwayat"
+                                className={cn(
+                                    'inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-neutral-200 bg-white px-5 py-2.5 sm:w-auto print:hidden',
+                                    'text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800',
+                                    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400',
+                                )}
+                            >
+                                <History className="h-4 w-4" aria-hidden="true" />
+                                Riwayat Sesi
+                            </Link>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    window.location.href = `/prediksi/${predictionId}/cetak`;
+                                }}
+                                className={cn(
+                                    'inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-5 py-2.5 sm:w-auto print:hidden',
+                                    'text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200 dark:hover:bg-rose-950/60',
+                                    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400',
+                                )}
+                            >
+                                <Printer className="h-4 w-4" aria-hidden="true" />
+                                Cetak Hasil
+                            </button>
+                        </div>
                     </div>
                 </header>
 
@@ -464,7 +493,7 @@ export default function PredictionResultPage({
                     </SectionCard>
 
                     {/* Cara kerja Naive Bayes */}
-                    <SectionCard icon={Workflow} title="Cara Kerja Prediksi (Naive Bayes)">
+                    {/* <SectionCard icon={Workflow} title="Cara Kerja Prediksi (Naive Bayes)">
                         <p className="-mt-2 text-sm leading-relaxed text-slate-600 dark:text-neutral-300">
                             Prediksi dihitung dengan algoritma Naive Bayes dari data latih: fenotipe
                             ayah &amp; ibu ditambah hasil skrining Thalassemia kedua orang tua (Tahap 1).
@@ -487,7 +516,7 @@ export default function PredictionResultPage({
                                 </li>
                             ))}
                         </ol>
-                    </SectionCard>
+                    </SectionCard> */}
 
                     {/* Edukasi */}
                     <SectionCard icon={BookOpen} title="Edukasi">

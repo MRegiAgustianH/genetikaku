@@ -1,4 +1,5 @@
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { History } from 'lucide-react';
 import { useEffect, type FormEvent } from 'react';
 
 import InputError from '@/components/input-error';
@@ -104,14 +105,27 @@ export default function PredictionFormPage({ phenotypeOptions, phenotypeIllustra
             <Head title="Prediksi Karakteristik Bayi" />
 
             <section className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
-                <header>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-neutral-50">
-                        Input Fenotipe Orang Tua
-                    </h1>
-                    <p className="mt-2 text-base text-slate-600 dark:text-neutral-400">
-                        Pilih karakteristik fisik ayah dan ibu. Hasil skrining Tahap 1 telah terisi
-                        otomatis dan tidak dapat diubah.
-                    </p>
+                <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-neutral-50">
+                            Input Fenotipe Orang Tua
+                        </h1>
+                        <p className="mt-2 text-base text-slate-600 dark:text-neutral-400">
+                            Pilih karakteristik fisik ayah dan ibu. Hasil skrining Tahap 1 telah
+                            terisi otomatis dan tidak dapat diubah.
+                        </p>
+                    </div>
+                    <Link
+                        href="/prediksi/riwayat"
+                        className={cn(
+                            'inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-neutral-200 bg-white px-5 py-2.5',
+                            'text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800',
+                            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400',
+                        )}
+                    >
+                        <History className="h-4 w-4" aria-hidden="true" />
+                        Riwayat Sesi
+                    </Link>
                 </header>
 
                 {/* Hasil_Skrining Tahap 1 (read-only, pre-filled) — Req 2.3. */}

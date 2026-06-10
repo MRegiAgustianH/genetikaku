@@ -28,6 +28,10 @@ Route::post('/prediksi', [PredictionController::class, 'store'])
     ->middleware('screening.completed')
     ->name('prediksi.store');
 
+Route::inertia('/prediksi/riwayat', 'public/prediction/history')
+    ->middleware('screening.completed')
+    ->name('prediksi.history');
+
 Route::get('/prediksi/{predictionResult}/cetak', [PredictionController::class, 'print'])
     ->name('prediksi.print');
 
